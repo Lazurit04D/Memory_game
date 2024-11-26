@@ -1,69 +1,70 @@
-﻿#include <time.h>
+#include <time.h>
 #include <iostream>
 using namespace std;
 
-int main()
+const char chars[8] = { '!', '@', '$', '%', '^', '&', '*', '0'};
+
+void InitGameField(char gameField[][4], bool user)
 {
-    srand(time(nullptr));
-
-    char arr[4][4] = {};
-    char arrUser[4][4] = {};
-    char chars[8] = { '!', '@', '#', '$', '%', '^', '&', '*' };
-    int countOfChars[8] = { 0,0,0,0,0,0,0,0 };
-    int countOfGuessed = 0;
-
-    for (int i = 0; i < 4; i++)
+    int randInt = 0;
+    int countOfAnyChar[8];
+    for (int i = 0; i < 8; i++)
     {
-        for (int j = 0; j < 4; j++)
-        {
-            int randInt = rand() % 8;
-            while (true)
-            {
-                randInt = rand() % 8;
-                if (countOfChars[randInt] < 2)
-                {
-                    break;
-                }
-            }
-            arr[i][j] = chars[randInt];
-            countOfChars[randInt]++;
-        }
+        countOfAnyChar[i] = 0;
     }
 
     for (int i = 0; i < 4; i++)
     {
         for (int j = 0; j < 4; j++)
         {
-            cout << arr[i][j] << " ";
+            if (!user)
+            {
+                while (true)
+                {
+                    randInt = rand() % 8;
+                    if (countOfAnyChar[randInt] < 2)
+                    {
+                        break;
+                    }
+                }
+
+                gameField[i][j] = chars[randInt];
+                countOfAnyChar[randInt]++;
+            }
+            else
+            {
+                gameField[i][j] = '#';
+            }
         }
+    }
+}
+
+void PrintGameField(const char gameField[][4])
+{
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            cout << gameField[i][j] << " ";
+        }
+
         cout << endl;
     }
+}
+
+int main()
+{
+    setlocale(0, "");
+    srand(time(nullptr));
+
+    char gameField[4][4] = {};
+    char userField[4][4] = {};
+
+    InitGameField(gameField, false);
+    PrintGameField(gameField);
 
     cout << endl;
 
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            arrUser[i][j] = '_';
-        }
-    }
-
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            cout << arrUser[i][j] << " ";
-        }
-        cout << endl;
-    }
-
-    //while (countOfGuessed < 8)
-    //{
-    //    int x1, y1, x2, y2;
-    //    cout << "Введите координаты 1-ой ячейки: ";
-    //    cin >> x1 >> y1;
-    //    cout << "Введите координаты 2-ой ячейки: ";
-    //    cin >> x2 >> y2;
-    //}
+    InitGameField(userField, true);
+    PrintGameField(userField);
 }
