@@ -1,6 +1,7 @@
 #include <time.h>
 #include <iostream>
 using namespace std;
+//1234567890-
 
 //Символы вынесены чтобы быть доступными для всей программы
 const char chars[8] = { '!', '@', '$', '%', '^', '&', '*', '0'};
