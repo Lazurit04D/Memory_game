@@ -1,13 +1,17 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <time.h>
 #include <windows.h> //Для функции Sleep()
 #include <iostream>
 using namespace std;
 
 //Символы вынесены чтобы быть доступными для всей программы
-const char chars[8] = { '!', '@', '#', '$', '%', '^', '&', '*' };
+char chars[8] = { '!', '@', '#', '$', '%', '^', '&', '*' };
+const char chars1[8] = { '!', '@', '#', '$', '%', '^', '&', '*' };
+const char chars2[8] = { '1', '2', '3', '4', '5', '6', '7', '8' };
+const char chars3[8] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
 int countOfGuessed = 0;
 
-//Функция сравнения игровых полей (На данный момент не используется)
+//Функция сравнения игровых полей
 int GameFieldCMP(const char gameField[][4], const char secondField[][4])
 {
     int countOfMatches = 0;
@@ -74,7 +78,9 @@ void InitGameField(char gameField[][4], int mode, const char secondField[][4] = 
 //Вывод игрового поля в консоль
 void PrintGameField(const char gameField[][4], int X = -1, int Y = -1)
 {
-    cout << "Количество угаданных пар: " << countOfGuessed << endl << endl;
+    cout << "---ИГРА ПАМЯТЬ---";
+    cout << "\n--Игра--\n";
+    cout << "\nКоличество угаданных пар: " << countOfGuessed << endl << endl;
 
     for (int i = 0; i < 5; i++)
     {
@@ -148,7 +154,8 @@ void OpenCell(const char gameField[][4], char userGameField[][4], int previosX =
         {
             userGameField[Y][X] = gameField[Y][X];
             userGameField[previosY][previosX] = gameField[previosY][previosX];
-            countOfGuessed++;
+            countOfGuessed = GameFieldCMP(userGameField, gameField) / 2;
+            //Сравнение полей для чёткого определения количества соответствий
         }
     }
 }
@@ -161,22 +168,143 @@ int main()
     //Создание 2-ух игровых полей
     char gameField[4][4] = {};
     char userGameField[4][4] = {};
+    int user = 0;
 
-    //Заполнение игрового поля
-    InitGameField(userGameField, 0);
-    InitGameField(gameField, 2);
-
-    //Цикл игры
-    while (countOfGuessed != 8)
+    while (user != 3)
     {
-        OpenCell(gameField, userGameField);
-    }
+        system("cls");
+        cout << "---ИГРА ПАМЯТЬ---";
+        Sleep(250);
+        cout << "\n[0] Загрузка...";
+        Sleep(1000);
+        system("cls");
+        cout << "---ИГРА ПАМЯТЬ---";
+        cout << "\n--Главное меню--\n";
+        cout << "\n[1] - Начать игру;\n[2] - Выбрать тематику карточек;\n[3] - Закрыть программу;\n>> Ваш выбор: ";
+        cin >> user;
 
-    //Окончание игры
-    PrintGameField(userGameField);
-    cout << "Игра окончена!\n\n";
-    cout << "ВЫ УГАДАЛИ ВСЕ ЯЧЕЙКИ!\n\n";
-    cout << "Поздравляем!\n";
+        switch (user)
+        {
+        case 1:
+
+            system("cls");
+
+            countOfGuessed = 0;
+
+            //Заполнение игрового поля
+            InitGameField(userGameField, 0);
+            InitGameField(gameField, 2);
+
+            //Цикл игры
+            while (countOfGuessed != 8)
+            {
+                OpenCell(gameField, userGameField);
+            }
+
+            //Окончание игры
+            PrintGameField(userGameField);
+            cout << "Игра окончена!\n\n";
+            cout << "ВЫ УГАДАЛИ ВСЕ ЯЧЕЙКИ!\n\n";
+            cout << "Поздравляем!\n";
+            Sleep(5000);
+
+            break;
+
+        case 2:
+
+            system("cls");
+            cout << "---ИГРА ПАМЯТЬ---";
+            Sleep(500);
+            cout << "\n--Выбор тематики карточек--\n";
+            int user2;
+            cout << "\n[1] - Спец. символы (!, @, #, $, %, ^, &, *);\n[2] - Цифры (1, 2, 3, 4, 5, 6, 7, 8);\n[3] - Буквы (A, B, C, D, E, F, G, H);\n[4] - Ручной ввод;\n>> Ваш выбор: ";
+            cin >> user2;
+
+            switch (user2)
+            {
+            case 1:
+
+                system("cls");
+                cout << "---ИГРА ПАМЯТЬ---";
+                cout << "\n--Выбор тематики карточек--\n";
+                Sleep(250);
+                strcpy(chars, chars1);
+                cout << "\nСпец. символы успешно выбраны!\n";
+                Sleep(2000);
+                break;
+
+            case 2:
+
+                system("cls");
+                cout << "---ИГРА ПАМЯТЬ---";
+                cout << "\n--Выбор тематики карточек--\n";
+                Sleep(250);
+                strcpy(chars, chars2);
+                cout << "\nЦифры успешно выбраны!\n";
+                Sleep(2000);
+                break;
+
+            case 3:
+
+                system("cls");
+                cout << "---ИГРА ПАМЯТЬ---";
+                cout << "\n--Выбор тематики карточек--\n";
+                Sleep(250);
+                strcpy(chars, chars3);
+                cout << "\nБуквы успешно выбраны!\n";
+                Sleep(2000);
+                break;
+
+            case 4:
+
+                system("cls");
+                cout << "---ИГРА ПАМЯТЬ---";
+                cout << "\n--Выбор тематики карточек--";
+                cout << "\n(Учтите, что символы не должны повторяться!)\n\n";
+                Sleep(250);
+                for (int i = 0; i < 8; i++)
+                {
+                    cout << "Введите символ №" << i + 1 << ": ";
+                    cin >> chars[i];
+                }
+                cout << "\nВы успешно ввели символы вручную!\n";
+                Sleep(2000);
+                break;
+
+            default:
+
+                system("cls");
+                cout << "---ИГРА ПАМЯТЬ---";
+                cout << "\n--Выбор тематики карточек--\n";
+                Sleep(500);
+                cout << "\nОШИБКА: Такого варианта нет в списке!\n";
+                Sleep(2000);
+                break;
+            }
+
+            break;
+
+        case 3:
+
+            system("cls");
+            cout << "---ИГРА ПАМЯТЬ---";
+            cout << "\n--Главное меню--\n";
+            Sleep(250);
+            cout << "\nПрограмма успешно закрыта!\n";
+            break;
+
+        default:
+
+            system("cls");
+            cout << "---ИГРА ПАМЯТЬ---";
+            cout << "\n--Главное меню--\n";
+            Sleep(500);
+            cout << "\nОШИБКА: Такого варианта нет в списке!\n";
+            Sleep(2000);
+            break;
+
+        }
+    }
 
     return 0;
 }
