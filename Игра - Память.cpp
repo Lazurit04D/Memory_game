@@ -5,11 +5,16 @@
 using namespace std;
 
 //Символы вынесены чтобы быть доступными для всей программы
+int charsVariant = 1;
 char chars[8] = { '!', '@', '#', '$', '%', '^', '&', '*' };
 const char chars1[8] = { '!', '@', '#', '$', '%', '^', '&', '*' };
 const char chars2[8] = { '1', '2', '3', '4', '5', '6', '7', '8' };
 const char chars3[8] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
 int countOfGuessed = 0;
+
+//Количество ходов
+int constCountOfTurns = 48;
+int countOfTurns = 48;
 
 //Функция сравнения игровых полей
 int GameFieldCMP(const char gameField[][4], const char secondField[][4])
@@ -80,7 +85,8 @@ void PrintGameField(const char gameField[][4], int X = -1, int Y = -1)
 {
     cout << "---ИГРА ПАМЯТЬ---";
     cout << "\n--Игра--\n";
-    cout << "\nКоличество угаданных пар: " << countOfGuessed << endl << endl;
+    cout << "\nКоличество угаданных пар: " << countOfGuessed;
+    cout << "\nКоличество оставшихся ходов: " << countOfTurns << endl << endl;
 
     for (int i = 0; i < 5; i++)
     {
@@ -117,45 +123,57 @@ void PrintGameField(const char gameField[][4], int X = -1, int Y = -1)
 
 void OpenCell(const char gameField[][4], char userGameField[][4], int previosX = -1, int previosY = -1)
 {
-    unsigned int X, Y;
-    char tempGameField[4][4] = {};
-    InitGameField(tempGameField, 1, userGameField);
-    //Создание временного игрового поля и копирование в него уже существующего
-
-    //Ввод координат ячейки
-    PrintGameField(userGameField);
-    cout << "Введите координату «X» у вашей ячейки\n(1-4, включительно): ";
-    cin >> X;
-    cout << "Введите координату «Y» у вашей ячейки\n(1-4, включительно): ";
-    cin >> Y;
-
-    X--;
-    Y--;
-    //Отсчёт идёт не от 0, а от 1
-    system("cls"); //Очиска консоли
-    tempGameField[Y][X] = gameField[Y][X]; //Копирование во временное игровое поле значение из основного игрового поля
-    PrintGameField(tempGameField, X, Y); //Вывод игрового поля в консоль
-    Sleep(1000);
-    system("cls");
-    //Очиска консоли спустя некоторое время
-
-    //Проверка на соответствие игрового поля с предыдущим игровым полем
-    if (gameField[previosY][previosX] != gameField[Y][X])
+    if (countOfTurns > 0)
     {
-        OpenCell(gameField, userGameField, X, Y);
-    }
-    else
-    {
-        if (previosX == X && previosY == Y)
+        int X, Y;
+        char tempGameField[4][4] = {};
+        InitGameField(tempGameField, 1, userGameField);
+        //Создание временного игрового поля и копирование в него уже существующего
+
+        //Ввод координат ячейки
+        PrintGameField(userGameField);
+        cout << "Введите координату «X» у вашей ячейки\n(1-4, включительно): ";
+        cin >> X;
+        cout << "Введите координату «Y» у вашей ячейки\n(1-4, включительно): ";
+        cin >> Y;
+
+        X--;
+        Y--;
+
+        if (X < 0 || Y < 0)
+        {
+            system("cls");
+            return ;
+        }
+
+        //Отсчёт идёт не от 0, а от 1
+        system("cls"); //Очиска консоли
+        tempGameField[Y][X] = gameField[Y][X]; //Копирование во временное игровое поле значение из основного игрового поля
+        PrintGameField(tempGameField, X, Y); //Вывод игрового поля в консоль
+        Sleep(1000);
+        system("cls");
+        //Очиска консоли спустя некоторое время
+
+        countOfTurns--;
+
+        //Проверка на соответствие игрового поля с предыдущим игровым полем
+        if (gameField[previosY][previosX] != gameField[Y][X])
         {
             OpenCell(gameField, userGameField, X, Y);
         }
         else
         {
-            userGameField[Y][X] = gameField[Y][X];
-            userGameField[previosY][previosX] = gameField[previosY][previosX];
-            countOfGuessed = GameFieldCMP(userGameField, gameField) / 2;
-            //Сравнение полей для чёткого определения количества соответствий
+            if (previosX == X && previosY == Y)
+            {
+                OpenCell(gameField, userGameField, X, Y);
+            }
+            else
+            {
+                userGameField[Y][X] = gameField[Y][X];
+                userGameField[previosY][previosX] = gameField[previosY][previosX];
+                countOfGuessed = GameFieldCMP(userGameField, gameField) / 2;
+                //Сравнение полей для чёткого определения количества соответствий
+            }
         }
     }
 }
@@ -170,7 +188,7 @@ int main()
     char userGameField[4][4] = {};
     int user = 0;
 
-    while (user != 3)
+    while (user != 4)
     {
         system("cls");
         cout << "---ИГРА ПАМЯТЬ---";
@@ -180,7 +198,11 @@ int main()
         system("cls");
         cout << "---ИГРА ПАМЯТЬ---";
         cout << "\n--Главное меню--\n";
-        cout << "\n[1] - Начать игру;\n[2] - Выбрать тематику карточек;\n[3] - Закрыть программу;\n>> Ваш выбор: ";
+        cout << "\n[1] - Начать игру;";
+        cout << "\n[2] - Ввести количество ходов [Сейчас: " << constCountOfTurns << "];";
+        cout << "\n[3] - Выбрать тематику карточек [Сейчас: " << (charsVariant == 1 ? "Спец.символы(!, @, #, $, %, ^, &, *)" : charsVariant == 2 ? "Цифры(1, 2, 3, 4, 5, 6, 7, 8)" : charsVariant == 3 ? "Буквы(A, B, C, D, E, F, G, H)" : "Ручной ввод") << "];";
+        cout << "\n[4] - Закрыть программу.";
+        cout << "\n>> Ваш выбор: ";
         cin >> user;
 
         switch (user)
@@ -190,13 +212,14 @@ int main()
             system("cls");
 
             countOfGuessed = 0;
+            countOfTurns = constCountOfTurns;
 
             //Заполнение игрового поля
             InitGameField(userGameField, 0);
             InitGameField(gameField, 2);
 
             //Цикл игры
-            while (countOfGuessed != 8)
+            while (countOfGuessed < 8 && countOfTurns > 0)
             {
                 OpenCell(gameField, userGameField);
             }
@@ -204,8 +227,16 @@ int main()
             //Окончание игры
             PrintGameField(userGameField);
             cout << "Игра окончена!\n\n";
-            cout << "ВЫ УГАДАЛИ ВСЕ ЯЧЕЙКИ!\n\n";
-            cout << "Поздравляем!\n";
+            if (countOfGuessed == 8)
+            {
+                cout << "ВЫ УГАДАЛИ ВСЕ ПАРЫ!\n\n";
+                cout << "Поздравляем!\n";
+            }
+            else
+            {
+                cout << "Вы не смогли угадать все пары.\n\n";
+                cout << "Вы проиграли :(\n";
+            }
             Sleep(5000);
 
             break;
@@ -215,12 +246,27 @@ int main()
             system("cls");
             cout << "---ИГРА ПАМЯТЬ---";
             Sleep(500);
-            cout << "\n--Выбор тематики карточек--\n";
-            int user2;
-            cout << "\n[1] - Спец. символы (!, @, #, $, %, ^, &, *);\n[2] - Цифры (1, 2, 3, 4, 5, 6, 7, 8);\n[3] - Буквы (A, B, C, D, E, F, G, H);\n[4] - Ручной ввод;\n>> Ваш выбор: ";
-            cin >> user2;
+            cout << "\n--Ввод количества ходов--\n";
+            cout << "\n>> Ваш выбор: ";
+            cin >> constCountOfTurns;
+            constCountOfTurns = (constCountOfTurns == 0 ? 1 : constCountOfTurns > 0 ? constCountOfTurns : constCountOfTurns * -1);
 
-            switch (user2)
+            break;
+
+        case 3:
+
+            system("cls");
+            cout << "---ИГРА ПАМЯТЬ---";
+            Sleep(500);
+            cout << "\n--Выбор тематики карточек--\n";
+            cout << "\n[1] - Спец. символы (!, @, #, $, %, ^, &, *);";
+            cout << "\n[2] - Цифры (1, 2, 3, 4, 5, 6, 7, 8);";
+            cout << "\n[3] - Буквы (A, B, C, D, E, F, G, H);";
+            cout << "\n[4] - Ручной ввод.";
+            cout << "\n>> Ваш выбор: ";
+            cin >> charsVariant;
+
+            switch (charsVariant)
             {
             case 1:
 
@@ -229,8 +275,9 @@ int main()
                 cout << "\n--Выбор тематики карточек--\n";
                 Sleep(250);
                 strcpy(chars, chars1);
-                cout << "\nСпец. символы успешно выбраны!\n";
+                cout << "\nСпец. символы успешно выбраны в качестве тематики карточек!\n";
                 Sleep(2000);
+
                 break;
 
             case 2:
@@ -240,8 +287,9 @@ int main()
                 cout << "\n--Выбор тематики карточек--\n";
                 Sleep(250);
                 strcpy(chars, chars2);
-                cout << "\nЦифры успешно выбраны!\n";
+                cout << "\nЦифры успешно выбраны в качестве тематики карточек!\n";
                 Sleep(2000);
+
                 break;
 
             case 3:
@@ -251,8 +299,9 @@ int main()
                 cout << "\n--Выбор тематики карточек--\n";
                 Sleep(250);
                 strcpy(chars, chars3);
-                cout << "\nБуквы успешно выбраны!\n";
+                cout << "\nБуквы успешно выбраны в качестве тематики карточек!\n";
                 Sleep(2000);
+
                 break;
 
             case 4:
@@ -269,6 +318,7 @@ int main()
                 }
                 cout << "\nВы успешно ввели символы вручную!\n";
                 Sleep(2000);
+
                 break;
 
             default:
@@ -279,18 +329,20 @@ int main()
                 Sleep(500);
                 cout << "\nОШИБКА: Такого варианта нет в списке!\n";
                 Sleep(2000);
+
                 break;
             }
 
             break;
 
-        case 3:
+        case 4:
 
             system("cls");
             cout << "---ИГРА ПАМЯТЬ---";
             cout << "\n--Главное меню--\n";
             Sleep(250);
             cout << "\nПрограмма успешно закрыта!\n";
+
             break;
 
         default:
@@ -301,6 +353,7 @@ int main()
             Sleep(500);
             cout << "\nОШИБКА: Такого варианта нет в списке!\n";
             Sleep(2000);
+
             break;
 
         }
