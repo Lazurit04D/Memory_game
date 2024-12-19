@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <time.h> //Для функции rand()
 #include <windows.h> //Для функции Sleep()
+#include <conio.h> // Для _getch()
 #include <iostream>
 using namespace std;
 
@@ -22,6 +23,9 @@ int oldFieldSizeY = 4;
 //Количество ходов
 int constCountOfTurns = fieldSizeX * fieldSizeY * 3;
 int countOfTurns = constCountOfTurns;
+
+//Условие для возвращение в главное меню
+bool mainMenu = false;
 
 //Функция сравнения игровых полей (Возвращает количество ячеек, которые совпадают в обоих полях)
 int GameFieldCMP(char** gameField, char** secondField)
@@ -91,7 +95,7 @@ void InitGameField(char** gameField, int mode, char** secondField = nullptr)
 }
 
 //Вывод игрового поля в консоль
-void PrintGameField(char** gameField, int X = -1, int Y = -1)
+void PrintGameField(char** gameField, bool OpenCell = false, int X1 = -1, int Y1 = -1, int X2 = -1, int Y2 = -1)
 {
     cout << "---ИГРА ПАМЯТЬ---";
     cout << "\n--Игра--\n";
@@ -116,12 +120,19 @@ void PrintGameField(char** gameField, int X = -1, int Y = -1)
                 {
                     if (gameField[i - 1][j - 1] == '?')
                     {
-                        cout << "|" << gameField[i - 1][j - 1] << "| ";
+                        if (OpenCell)
+                        {
+                            cout << (X1 + 1 == j && Y1 + 1 == i ? ">" : "|") << gameField[i - 1][j - 1] << (X1 + 1 == j && Y1 + 1 == i ? "< " : "| ");
+                        }
+                        else
+                        {
+                            cout << "|" << gameField[i - 1][j - 1] << "| ";
+                        }
                     }
                     else
                     {
                         //Тернарный оператор определяет, какая ячейка была выбрана последней, для того, чтобы её выделить
-                        cout << (X + 1 == j && Y + 1 == i ? ">" : "[") << gameField[i - 1][j - 1] << (X + 1 == j && Y + 1 == i ? "< " : "] ");
+                        cout << ((X1 + 1 == j && Y1 + 1 == i) || (X2 + 1 == j && Y2 + 1 == i) ? ">" : "[") << gameField[i - 1][j - 1] << ((X1 + 1 == j && Y1 + 1 == i) || (X2 + 1 == j && Y2 + 1 == i) ? "< " : "] ");
                     }
                 }
             }
@@ -131,11 +142,15 @@ void PrintGameField(char** gameField, int X = -1, int Y = -1)
     }
 }
 
-void OpenCell(char** gameField, char** userGameField, int previosX = -1, int previosY = -1)
+void OpenCell(char** gameField, char** userGameField, int previosX = 0, int previosY = 0, bool second = false)
 {
     if (countOfTurns > 0)
     {
-        int X, Y, user;
+        int X = previosX, Y = previosY, user;
+
+        int X1 = 0, Y1 = 0, X2 = 1, Y2 = 0;
+        char neededChar = '?';
+        bool ability = false;
 
         char** tempGameField = new char* [fieldSizeY];
         for (int i = 0; i < fieldSizeY; i++)
@@ -147,143 +162,184 @@ void OpenCell(char** gameField, char** userGameField, int previosX = -1, int pre
         //Создание временного игрового поля и копирование в него уже существующего
 
         //Ввод координат ячейки
-        PrintGameField(userGameField);
-        cout << "(Для использования спец. способностей введите координаты [X = 0, Y = 0])\n";
-        cout << "\nВведите координату «X» у вашей ячейки\n(1-4, включительно): ";
-        cin >> X;
-        cout << "Введите координату «Y» у вашей ячейки\n(1-4, включительно): ";
-        cin >> Y;
+        PrintGameField(tempGameField, true, X, Y);
+        cout << "[ESCAPE] - Главное меню;\n";
+        cout << "[ПРОБЕЛ] - Спец. способности;\n";
+        cout << "[ENTER] - Продолжить.\n";
 
-        if (X == 0 && Y == 0)
+        while (true)
         {
-            int X1 = 0, Y1 = 0, X2 = 1, Y2 = 0;
-            char neededChar = '?';
-
-            system("cls");
-            cout << "---ИГРА ПАМЯТЬ---";
-            Sleep(200);
-            cout << "\n--Выбор спец. способностей--\n";
-            Sleep(200);
-            cout << "\nКоличество угаданных пар: " << countOfGuessed;
-            cout << "\nКоличество оставшихся ходов: " << countOfTurns << endl;
-            Sleep(200);
-            cout << "\n[1] - Открыть всё поле (Стоимость: 5 ходов);";
-            cout << "\n[2] - Открыть случайную пару (Стоимость: 3 хода).";
-            cout << "\n>> Ваш выбор: ";
-            cin >> user;
-
-            switch (user)
+            if (_kbhit()) //Проверяем, была ли нажата клавиша
             {
-            case 1:
+                int ch = _getch(); //Считываем нажатую клавишу
 
-                system("cls");
-                countOfTurns = (countOfTurns - 5 > 0 ? countOfTurns - 5 : 0);
-                                    //Защита от отрицательных чисел
-                PrintGameField(gameField);
-                Sleep(2000);
-
-                break;
-
-            case 2:
-
-                system("cls");
-                for (int i = 0; i < fieldSizeY; i++)
+                // Если это стрелочка
+                if (ch == 0 || ch == 224)
                 {
-                    for (int j = 0; j < fieldSizeX; j++)
+                    switch (_getch())
                     {
-                        if (neededChar == '?')
+                    case 72: //Стрелочка вверх
+                        if (Y > 0 && Y < fieldSizeY)
                         {
-                            if (userGameField[i][j] == '?')
-                            {
-                                X1 = j;
-                                Y1 = i;
-                                neededChar = gameField[i][j];
-                            }
+                            Y--;
                         }
-                        else
+                        break;
+                    case 80: //Стрелочка вниз
+                        if (Y >= 0 && Y < fieldSizeY - 1)
                         {
-                            if (gameField[i][j] == neededChar)
+                            Y++;
+                        }
+                        break;
+                    case 75: //Стрелочка влево
+                        if (X > 0 && X < fieldSizeX)
+                        {
+                            X--;
+                        }
+                        break;
+                    case 77: //Стрелочка вправо
+                        if (X >= 0 && X < fieldSizeX - 1)
+                        {
+                            X++;
+                        }
+                        break;
+                    }
+
+                    system("cls");
+                    PrintGameField(tempGameField, true, X, Y);
+                    cout << "[ESCAPE] - Главное меню;\n";
+                    cout << "[ПРОБЕЛ] - Спец. способности;\n";
+                    cout << "[ENTER] - Продолжить.\n";
+                }
+                else if (ch == 13 || ch == 27 || ch == 32)
+                {
+                    if (ch == 27)
+                    {
+                        mainMenu = true;
+                    }
+                    else if (ch == 32)
+                    {
+                        ability = true;
+                        system("cls");
+                        cout << "---ИГРА ПАМЯТЬ---";
+                        Sleep(200);
+                        cout << "\n--Выбор спец. способностей--\n";
+                        Sleep(200);
+                        cout << "\nКоличество угаданных пар: " << countOfGuessed;
+                        cout << "\nКоличество оставшихся ходов: " << countOfTurns << endl;
+                        Sleep(200);
+                        cout << "\n[1] - Открыть всё поле (Стоимость: 5 ходов);";
+                        cout << "\n[2] - Открыть случайную пару (Стоимость: 3 хода).";
+                        cout << "\n>> Ваш выбор: ";
+                        cin >> user;
+
+                        switch (user)
+                        {
+                        case 1:
+
+                            system("cls");
+                            countOfTurns = (countOfTurns - 5 > 0 ? countOfTurns - 5 : 0);
+                            //Защита от отрицательных чисел
+                            PrintGameField(gameField);
+                            Sleep(2000);
+
+                            break;
+
+                        case 2:
+
+                            system("cls");
+                            for (int i = 0; i < fieldSizeY; i++)
                             {
-                                X2 = j;
-                                Y2 = i;
-                                break;
+                                for (int j = 0; j < fieldSizeX; j++)
+                                {
+                                    if (neededChar == '?')
+                                    {
+                                        if (userGameField[i][j] == '?')
+                                        {
+                                            X1 = j;
+                                            Y1 = i;
+                                            neededChar = gameField[i][j];
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (gameField[i][j] == neededChar)
+                                        {
+                                            X2 = j;
+                                            Y2 = i;
+                                            break;
+                                        }
+                                    }
+                                }
                             }
+                            tempGameField[Y1][X1] = gameField[Y1][X1];
+                            tempGameField[Y2][X2] = gameField[Y2][X2];
+                            countOfTurns = (countOfTurns - 3 > 0 ? countOfTurns - 3 : 0);
+                            //Защита от отрицательных чисел
+                            PrintGameField(tempGameField);
+                            Sleep(2000);
+
+                            break;
+
+                        default:
+
+                            system("cls");
+                            cout << "---ИГРА ПАМЯТЬ---";
+                            cout << "\n--Выбор спец. способностей--\n";
+                            cout << "\nКоличество угаданных пар: " << countOfGuessed;
+                            cout << "\nКоличество оставшихся ходов: " << countOfTurns << endl;
+                            Sleep(500);
+                            cout << "\nОШИБКА: Такого варианта нет в списке!\n";
+                            Sleep(2000);
+
+                            break;
+
                         }
                     }
+
+                    break;
                 }
-                tempGameField[Y1][X1] = gameField[Y1][X1];
-                tempGameField[Y2][X2] = gameField[Y2][X2];
-                countOfTurns = (countOfTurns - 3 > 0 ? countOfTurns - 3 : 0);
-                                    //Защита от отрицательных чисел
-                PrintGameField(tempGameField);
-                Sleep(2000);
-
-                break;
-
-            default:
-
-                system("cls");
-                cout << "---ИГРА ПАМЯТЬ---";
-                cout << "\n--Выбор спец. способностей--\n";
-                cout << "\nКоличество угаданных пар: " << countOfGuessed;
-                cout << "\nКоличество оставшихся ходов: " << countOfTurns << endl;
-                Sleep(500);
-                cout << "\nОШИБКА: Такого варианта нет в списке!\n";
-                Sleep(2000);
-
-                break;
-
             }
         }
 
-        X--;
-        Y--;
-
-        if (X < 0 || Y < 0 || X >= fieldSizeX || Y >= fieldSizeY)
-        {
-            system("cls");
-            return;
-        }
-
-        //Отсчёт идёт не от 0, а от 1
-        system("cls"); //Очиска консоли
-        tempGameField[Y][X] = gameField[Y][X]; //Копирование во временное игровое поле значение из основного игрового поля
-        PrintGameField(tempGameField, X, Y); //Вывод игрового поля в консоль
-        Sleep(1000);
         system("cls");
-        //Очиска консоли спустя некоторое время
+        //Очиска консоли
 
-        countOfTurns--;
-
-        //Проверка на соответствие игрового поля с предыдущим игровым полем
-        if (previosX != -1 && previosY != -1)
+        if (!mainMenu && !ability)
         {
-            if (gameField[previosY][previosX] != gameField[Y][X])
+            //Убавляем количество ходов
+            countOfTurns--;
+
+            //Если второй выбор
+            if (second)
             {
-                OpenCell(gameField, userGameField, X, Y);
+                system("cls"); //Очиска консоли
+                tempGameField[previosY][previosX] = gameField[previosY][previosX];
+                tempGameField[Y][X] = gameField[Y][X]; //Копирование во временное игровое поле значение из основного игрового поля
+                PrintGameField(tempGameField, false, previosX, previosY, X, Y); //Вывод игрового поля в консоль
+                Sleep(1000);
+
+                system("cls");
+                //Очиска консоли
+
+                //Проверка на соответствие игрового поля с предыдущим игровым полем
+                if (gameField[previosY][previosX] == gameField[Y][X])
+                {
+                    if (previosX != X || previosY != Y)
+                    {
+                        userGameField[Y][X] = gameField[Y][X];
+                        userGameField[previosY][previosX] = gameField[previosY][previosX];
+                        countOfGuessed = GameFieldCMP(userGameField, gameField) / 2;
+                        //Сравнение полей для чёткого определения количества соответствий
+                    }
+                }
             }
             else
             {
-                if (previosX == X && previosY == Y)
-                {
-                    OpenCell(gameField, userGameField, X, Y);
-                }
-                else
-                {
-                    userGameField[Y][X] = gameField[Y][X];
-                    userGameField[previosY][previosX] = gameField[previosY][previosX];
-                    countOfGuessed = GameFieldCMP(userGameField, gameField) / 2;
-                    //Сравнение полей для чёткого определения количества соответствий
-                }
+                OpenCell(gameField, userGameField, X, Y, second == false ? true : false);
             }
-        }
-        else
-        {
-            OpenCell(gameField, userGameField, X, Y);
         }
 
         //Удаление памяти
-
         for (int i = 0; i < fieldSizeY; i++)
         {
             delete[] tempGameField[i];
@@ -336,36 +392,39 @@ int main()
         case 1:
 
             //Перевыделение памяти
-
-            for (int i = 0; i < oldFieldSizeY; i++)
+            if (oldFieldSizeX != fieldSizeX || oldFieldSizeY != fieldSizeY)
             {
-                delete[] gameField[i];
-            }
-            delete[] gameField;
+                for (int i = 0; i < oldFieldSizeY; i++)
+                {
+                    delete[] gameField[i];
+                }
+                delete[] gameField;
 
-            for (int i = 0; i < oldFieldSizeY; i++)
-            {
-                delete[] userGameField[i];
-            }
-            delete[] userGameField;
+                for (int i = 0; i < oldFieldSizeY; i++)
+                {
+                    delete[] userGameField[i];
+                }
+                delete[] userGameField;
 
-            gameField = new char* [fieldSizeY];
-            for (int i = 0; i < fieldSizeY; i++)
-            {
-                gameField[i] = new char[fieldSizeX];
-            }
+                gameField = new char* [fieldSizeY];
+                for (int i = 0; i < fieldSizeY; i++)
+                {
+                    gameField[i] = new char[fieldSizeX];
+                }
 
-            userGameField = new char* [fieldSizeY];
-            for (int i = 0; i < fieldSizeY; i++)
-            {
-                userGameField[i] = new char[fieldSizeX];
-            }
+                userGameField = new char* [fieldSizeY];
+                for (int i = 0; i < fieldSizeY; i++)
+                {
+                    userGameField[i] = new char[fieldSizeX];
+                }
 
-            oldFieldSizeX = fieldSizeX;
-            oldFieldSizeY = fieldSizeY;
+                oldFieldSizeX = fieldSizeX;
+                oldFieldSizeY = fieldSizeY;
+            }
 
             system("cls");
 
+            mainMenu = false;
             countOfGuessed = 0;
             countOfTurns = constCountOfTurns;
 
@@ -374,25 +433,28 @@ int main()
             InitGameField(gameField, 2);
 
             //Цикл игры
-            while (countOfGuessed < fieldSizeX * fieldSizeY / 2 && countOfTurns > 0)
+            while (countOfGuessed < fieldSizeX * fieldSizeY / 2 && countOfTurns > 0 && !mainMenu)
             {
                 OpenCell(gameField, userGameField);
             }
 
-            //Окончание игры
-            PrintGameField(userGameField);
-            cout << "Игра окончена!\n\n";
-            if (countOfGuessed == fieldSizeX * fieldSizeY / 2)
+            if (!mainMenu)
             {
-                cout << "ВЫ УГАДАЛИ ВСЕ ПАРЫ!\n\n";
-                cout << "Поздравляем!\n";
+                //Окончание игры
+                PrintGameField(userGameField);
+                cout << "Игра окончена!\n\n";
+                if (countOfGuessed == fieldSizeX * fieldSizeY / 2)
+                {
+                    cout << "ВЫ УГАДАЛИ ВСЕ ПАРЫ!\n\n";
+                    cout << "Поздравляем!\n";
+                }
+                else
+                {
+                    cout << "Вы не смогли угадать все пары.\n\n";
+                    cout << "Вы проиграли :(\n";
+                }
+                Sleep(5000);
             }
-            else
-            {
-                cout << "Вы не смогли угадать все пары.\n\n";
-                cout << "Вы проиграли :(\n";
-            }
-            Sleep(5000);
 
             break;
 
@@ -433,7 +495,7 @@ int main()
                 {
                     fieldSizeX = (tempFieldSizeX == 0 ? 2 : tempFieldSizeX > 0 ? tempFieldSizeX : tempFieldSizeX * -1);
                     fieldSizeY = (tempFieldSizeY == 0 ? 2 : tempFieldSizeY > 0 ? tempFieldSizeY : tempFieldSizeY * -1);
-                                                        //Защита от неправильных чисел
+                    //Защита от неправильных чисел
 
                     system("cls");
                     cout << "---ИГРА ПАМЯТЬ---";
@@ -454,7 +516,7 @@ int main()
                         {
                             chars[i] = chars1[i];
                         }
-                        
+
                         charsVariant = 1;
                         Sleep(400);
                         cout << "Спец. символы успешно выбраны в качестве тематики карточек!\n";
@@ -475,7 +537,7 @@ int main()
             cout << "\n>> Ваш выбор: ";
             cin >> constCountOfTurns;
             constCountOfTurns = (constCountOfTurns == 0 ? 1 : constCountOfTurns > 0 ? constCountOfTurns : constCountOfTurns * -1);
-                                                    //Защита от неправильных чисел
+            //Защита от неправильных чисел
 
             system("cls");
             cout << "---ИГРА ПАМЯТЬ---";
@@ -648,6 +710,8 @@ int main()
 
         }
     }
+
+
 
     //Удаление памяти
 
