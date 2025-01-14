@@ -626,7 +626,7 @@ int main()
 
                 for (int i = 0; i < currentCharsSize; i++)
                 {
-                    chars[i] = chars2[i];
+                    chars[i] = chars3[i];
                 }
 
                 cout << "\nБуквы успешно выбраны в качестве тематики карточек!\n";
